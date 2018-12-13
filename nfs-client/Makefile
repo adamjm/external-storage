@@ -20,8 +20,10 @@ ifeq ($(VERSION),)
 endif
 IMAGE = $(REGISTRY)nfs-client-provisioner:$(VERSION)
 IMAGE_ARM = $(REGISTRY)nfs-client-provisioner-arm:$(VERSION) 
+IMAGE_PPC64LE = $(REGISTRY)nfs-client-provisioner-ppc64le:$(VERSION) 
 MUTABLE_IMAGE = $(REGISTRY)nfs-client-provisioner:latest
 MUTABLE_IMAGE_ARM = $(REGISTRY)nfs-client-provisioner-arm:latest
+MUTABLE_IMAGE_PPC64LE = $(REGISTRY)nfs-client-provisioner-ppc64le:latest
 
 all: build image build_arm image_arm 
 
@@ -33,9 +35,16 @@ build:
 build_arm:
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -a -ldflags '-extldflags "-static"' -o docker/arm/nfs-client-provisioner ./cmd/nfs-client-provisioner 
 
+build_ppc64le:
+	CGO_ENABLED=0 GOOS=linux GOARCH=ppc64le go build -a -ldflags '-extldflags "-static"' -o docker/ppc64le/nfs-client-provisioner ./cmd/nfs-client-provisioner 
+
 image:
 	docker build -t $(MUTABLE_IMAGE) docker/x86_64
 	docker tag $(MUTABLE_IMAGE) $(IMAGE)
+
+image_ppc64le:
+	docker build -t $(MUTABLE_IMAGE_PPC64LE) docker/ppc64le
+	docker tag $(MUTABLE_IMAGE_PPC64LE) $(IMAGE_PPC64LE)
 
 image_arm:
 	docker run --rm --privileged multiarch/qemu-user-static:register --reset
@@ -47,3 +56,5 @@ push:
 	docker push $(MUTABLE_IMAGE)
 	docker push $(IMAGE_ARM)
 	docker push $(MUTABLE_IMAGE_ARM)
+	docker push $(IMAGE_PPC64LE)
+	docker push $(MUTABLE_IMAGE_PPC64LE)
